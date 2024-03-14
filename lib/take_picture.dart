@@ -5,13 +5,16 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:permission_handler/permission_handler.dart';
+import 'package:video_thumbnail/video_thumbnail.dart';
 
 
 class TakePictureScreen extends StatefulWidget {
   final Function(List<String>) onImages;
+  final bool isVideo;
    const TakePictureScreen({
     super.key,
-   required this.onImages
+   required this.onImages,
+     this.isVideo = false,
   });
 
   @override
@@ -65,7 +68,9 @@ class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindin
      }
 
 
-   }catch(e){}
+   }catch(e){
+      //
+   }
     setState(() {});
 
 
@@ -208,7 +213,7 @@ class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindin
   Widget build(BuildContext context) {
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Photo')),
+      appBar: AppBar(title: Text(widget.isVideo?'Video':'Photo')),
       body: (_controller!=null && _controller!.value.isInitialized)?Column(children: [
           Expanded(child: Container(
             clipBehavior: Clip.hardEdge,
@@ -271,7 +276,7 @@ class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindin
                   height: 46,
 
                   decoration: BoxDecoration(color: const Color(0xffDDE5DA),borderRadius: BorderRadius.circular(12)),
-                  child: images.isEmpty?null:Image.file(File(images.last),fit: BoxFit.cover,),
+                  child: images.isEmpty?null:Image.file(File(widget.isVideo?(images.last.split('.${images.last.split(".").removeLast()}').join('.png')):images.last),fit: BoxFit.cover,),
                 ),
               ),
               const SizedBox(width: 12,),
@@ -279,10 +284,49 @@ class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindin
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                    color: const Color(0xffB5F1BD),
+                    color: _controller!.value.isRecordingVideo?Colors.redAccent:const Color(0xffB5F1BD),
                     borderRadius: BorderRadius.circular(15)
                 ),
-                child: IconButton(
+                child: widget.isVideo?
+                    IconButton(
+                    icon: Icon(_controller!.value.isRecordingVideo?Icons.stop_circle_outlined:Icons.video_camera_back),
+                    onPressed: () async {
+                      try {
+
+                        if(_controller!.value.isRecordingVideo){
+                          final video = await _controller!.stopVideoRecording();
+                          if(appDocumentsDir !=null){
+                            File file = File(path.join(appDocumentsDir!.path,path.basename(video.path)));
+                            await file.create();
+                            await file.writeAsBytes(await video.readAsBytes());
+                            try{
+                              await VideoThumbnail.thumbnailFile(video: file.path);
+                            }catch(e){
+                              //
+                            }
+                            try{
+                              File(video.path).deleteSync();
+                            }catch(e){
+                              //
+                            }
+                            setState(() {
+                              images.add(file.path);
+                            });
+                          }else{
+                            if(context.mounted){
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('did not get permission to access storage')));
+                            }
+                          }
+                        }else{
+                          _controller?.startVideoRecording();
+                        }
+                        if (!context.mounted) return;
+                      } catch (e) {
+                        // If an error occurs, log the error to the console.
+                      }
+                    }
+                )
+                    :IconButton(
                     icon: const Icon(Icons.camera),
                     onPressed: () async {
                       // Take the Picture in a try / catch block. If anything goes wrong,
@@ -325,7 +369,15 @@ class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindin
                     color: const Color(0xffDDE5DA),
                     borderRadius: BorderRadius.circular(15)
                 ),
-                child: IconButton(
+                child: _controller!.value.isRecordingVideo?
+                IconButton(onPressed: (){
+                  if(_controller!.value.isRecordingPaused){
+                    _controller!.resumeVideoRecording();
+                  }else{
+                    _controller!.pauseVideoRecording();
+                  }
+                }, icon: Icon(_controller!.value.isRecordingPaused?Icons.fiber_manual_record:Icons.pause_circle_outline_rounded,color: _controller!.value.isRecordingPaused?Colors.red:Colors.black,))
+                    :IconButton(
                   icon: const Icon(Icons.file_upload_outlined),
                   onPressed: (){
                     if(images.isNotEmpty){
@@ -336,7 +388,7 @@ class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindin
                         //
                       }
                     }else{
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No images taken')));
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('No ${widget.isVideo?"video":"image"} taken')));
                     }
                   },
                 ),

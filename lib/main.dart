@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:take_picture/take_picture.dart';
 
@@ -19,18 +18,26 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(),
       body: Center(
-        child: IconButton(
-          icon: const Icon(Icons.camera_alt),
-          onPressed: (){
-            print('pressed');
-            Navigator.push(context, MaterialPageRoute(builder: (context) {
-              return  TakePictureScreen(onImages: (images){
-                print(images.length);
-              },);
-            },)).then((value) {
-              print(value);
-            });
-          },
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.camera_alt),
+              onPressed: (){
+                Navigator.push(context, MaterialPageRoute(builder: (context) {
+                  return  TakePictureScreen(onImages: (images){},);
+                },));
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.video_camera_back_rounded),
+              onPressed: (){
+                Navigator.push(context, MaterialPageRoute(builder: (context) {
+                  return  TakePictureScreen(isVideo: true,onImages: (images){},);
+                },));
+              },
+            ),
+          ],
         ),
       ),
     );
