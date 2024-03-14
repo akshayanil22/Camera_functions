@@ -222,6 +222,7 @@ class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindin
                 borderRadius: BorderRadius.circular(12)
             ),
             child: Stack(
+              alignment: Alignment.bottomCenter,
               children: [
 
 
@@ -261,7 +262,17 @@ class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindin
                         //   setState(() {});
                         // }, icon: SvgPicture.asset('assets/images/flash_${_controller?.value.flashMode==FlashMode.off?'off':'on'}.svg')),
                       ],
-                    ))
+                    )),
+                if(_controller!.value.isRecordingPaused)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.circular(12)
+                  ),
+                  child: const Text('Paused',style: TextStyle(fontSize: 16,fontWeight: FontWeight.w500,color: Colors.white),),
+                )
               ],
             ),
           )),
