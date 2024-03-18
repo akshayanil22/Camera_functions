@@ -5,11 +5,12 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 import 'package:permission_handler/permission_handler.dart';
+import 'package:take_picture/results_view_screen.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 
 
 class TakePictureScreen extends StatefulWidget {
-  final Function(List<String>) onImages;
+  final Function(List<String> value) onImages;
   final bool isVideo;
    const TakePictureScreen({
     super.key,
@@ -279,15 +280,19 @@ class TakePictureScreenState extends State<TakePictureScreen> with WidgetsBindin
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Badge(
-                label: Text(images.length.toString()),
-                child: Container(
-                  clipBehavior: Clip.hardEdge,
-                  width: 46,
-                  height: 46,
-
-                  decoration: BoxDecoration(color: const Color(0xffDDE5DA),borderRadius: BorderRadius.circular(12)),
-                  child: images.isEmpty?null:Image.file(File(widget.isVideo?(images.last.split('.${images.last.split(".").removeLast()}').join('.png')):images.last),fit: BoxFit.cover,),
+              GestureDetector(
+                onTap: (){
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => ResultsViewScreen(isVideo: widget.isVideo,result: images,),)).then((value) => setState(() {}));
+                },
+                child: Badge(
+                  label: Text(images.length.toString()),
+                  child: Container(
+                    clipBehavior: Clip.hardEdge,
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(color: const Color(0xffDDE5DA),borderRadius: BorderRadius.circular(12)),
+                    child: images.isEmpty?null:Image.file(File(widget.isVideo?(images.last.split('.${images.last.split(".").removeLast()}').join('.png')):images.last),fit: BoxFit.cover,),
+                  ),
                 ),
               ),
               const SizedBox(width: 12,),
